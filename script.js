@@ -50,9 +50,11 @@ function initFinal(){
   arena.onmousemove=e=>{
     const r=arena.getBoundingClientRect();
     moveYes(yesWrap,e.clientX-r.left,e.clientY-r.top,arena);
+
     ahem.classList.remove("hidden");
     clearTimeout(hideTimer);
     hideTimer=setTimeout(()=>ahem.classList.add("hidden"),140);
+
     dodgeNo(no,e.clientX-r.left,e.clientY-r.top,arena);
   };
 
@@ -95,24 +97,51 @@ const dialogueLines=[
 ];
 
 let dialogueTimer=null;
+
+function hideTypingIndicatorForever(){
+  const typingEl = document.querySelector(".typing");
+  if (!typingEl) return;
+
+  // If already hidden, do nothing
+  if (typingEl.dataset.hidden === "1") return;
+  typingEl.dataset.hidden = "1";
+
+  // Fade out then remove from layout
+  typingEl.style.transition = "opacity 600ms ease";
+  typingEl.style.opacity = "0";
+  setTimeout(() => {
+    typingEl.style.display = "none";
+  }, 650);
+}
+
 function startDialogue(){
   const lineEl=document.getElementById("dialogueLine");
-  const typingEl=document.querySelector(".typing");
+  if (!lineEl) return;
+
+  // Ensure typing is visible again if user somehow re-enters slide 3
+  const typingEl = document.querySelector(".typing");
+  if (typingEl) {
+    typingEl.style.display = "";
+    typingEl.style.opacity = "";
+    typingEl.style.transition = "";
+    delete typingEl.dataset.hidden;
+  }
 
   let i=0;
+
+  // Start timer only once
+  if (dialogueTimer) clearInterval(dialogueTimer);
+
   dialogueTimer=setInterval(()=>{
     if(i < dialogueLines.length-1){
       i++;
       lineEl.textContent=dialogueLines[i];
 
-      // when LAST message appears → stop typing indicator
+      // If this is the LAST message, stop + hide typing indicator
       if(i === dialogueLines.length-1){
         clearInterval(dialogueTimer);
         dialogueTimer=null;
-        if(typingEl){
-          typingEl.style.opacity="0";
-          typingEl.style.transition="opacity 600ms ease";
-        }
+        hideTypingIndicatorForever();
       }
     }
   },7000);
@@ -122,8 +151,12 @@ function startDialogue(){
 async function runSuccess(){
   showSlide("slide-success");
 
+  // Clean up any running dialogue timer
+  if (dialogueTimer) { clearInterval(dialogueTimer); dialogueTimer=null; }
+
   const t=document.getElementById("successText");
   const sunflower=document.getElementById("sunflower");
+
   t.innerHTML="";
   if(sunflower) sunflower.classList.add("hidden");
 
