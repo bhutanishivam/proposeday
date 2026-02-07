@@ -36,8 +36,13 @@ body{
   padding:16px;
 }
 
-.slide{ display:none; width:min(860px,96vw); }
+.slide{
+  display:none;
+  width:min(860px,96vw);
+}
 .slide.active{ display:block; }
+
+/* ---------- CARD ---------- */
 
 .card{
   background: var(--card);
@@ -50,11 +55,14 @@ body{
 
 .card.tall{ min-height:540px; }
 
+/* ---------- SLIDE 1 & 2 LAYOUT ---------- */
+
 .panel{
   display:flex;
   gap:18px;
   align-items:center;
 }
+
 @media (max-width:720px){
   .panel{ flex-direction:column; }
 }
@@ -93,7 +101,12 @@ body{
   line-height:1.45;
 }
 
-.ctaRow{ margin-top:8px; text-align:center; }
+.ctaRow{
+  margin-top:8px;
+  text-align:center;
+}
+
+/* ---------- BUTTONS ---------- */
 
 .btn{
   padding:12px 18px;
@@ -109,6 +122,18 @@ body{
   background: var(--pink);
   border-color: var(--pinkB);
 }
+
+.btn.yes{
+  background: var(--yes);
+  border-color: var(--yesB);
+}
+
+.btn.no{
+  background: var(--no);
+  border-color: var(--noB);
+}
+
+/* ---------- SLIDE 3 ---------- */
 
 .title{
   text-align:center;
@@ -133,26 +158,25 @@ body{
   gap:10px;
 }
 
-.btn.yes{
-  background: var(--yes);
-  border-color: var(--yesB);
-}
-
 .btn.no{
   position:absolute;
   left:62%;
   top:62%;
   transform:translate(-50%,-50%);
-  background: var(--no);
-  border-color: var(--noB);
 }
 
 .ahem{ font-weight:900; }
 .hidden{ display:none; }
 
-/* dialogue + typing */
+/* ---------- DIALOGUE ---------- */
+
 .hintWrap{ margin-top:14px; }
-.hint{ text-align:center; min-height:24px; }
+
+.hint{
+  text-align:center;
+  min-height:24px;
+}
+
 .typing{
   margin-top:6px;
   text-align:right;
@@ -160,7 +184,7 @@ body{
   opacity:0.85;
 }
 
-/* DOT FIX — left → right guaranteed */
+/* DOT ANIMATION (left → right) */
 .dots{
   display:inline-flex;
   width:18px;
@@ -178,18 +202,27 @@ body{
   40%{ opacity:1; }
 }
 
-/* SUCCESS */
-.successText{
-  font-size:22px;
-  line-height:1.55;
-  min-height:140px;
+/* ---------- SUCCESS SLIDE (IMPORTANT PART) ---------- */
+
+.slide#slide-success .card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;      /* 🔑 hard center horizontally */
   text-align:center;
 }
 
+.successText{
+  font-size:22px;
+  line-height:1.55;
+  max-width:720px;
+}
+
+/* 🔥 hawt fire */
 .hawtWrap{
   position:relative;
   font-weight:950;
 }
+
 .hawtWrap::before{
   content:"";
   position:absolute;
@@ -206,9 +239,10 @@ body{
   50%{ transform:scale(1.05); opacity:0.9; }
 }
 
+/* 🌻 SUNFLOWER — GUARANTEED CENTER */
 .sunflower{
-  display: block;
-  margin: 16px auto 0 auto; /* centers horizontally */
-  width: 260px;
-  max-width: 70vw;
+  display:block;
+  margin:18px auto 0 auto; /* bulletproof centering */
+  width:260px;
+  max-width:70vw;
 }
