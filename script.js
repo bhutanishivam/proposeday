@@ -1,195 +1,82 @@
 "use strict";
 
-// ---------- Helpers ----------
-function showSlide(id) {
-  document.querySelectorAll(".slide").forEach(s => s.classList.remove("active"));
+function showSlide(id){
+  document.querySelectorAll(".slide").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+const rand=(a,b)=>Math.random()*(b-a)+a;
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function clamp(v, min, max) {
-  return Math.max(min, Math.min(max, v));
-}
-
-function rand(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-// ---------- Slideshow timing ----------
-const s1Lines = [
+// SLIDE 1
+const s1Lines=[
   "Oh god…",
   "I’ve seen this on Instagram already.",
   "Doesnt this boy know i hate fads."
 ];
 
-async function runSlides() {
-  // Slide 1
+async function runSlides(){
   showSlide("slide-1");
-  const s1Bubble = document.getElementById("s1-bubble");
-  s1Bubble.textContent = "";
-  await sleep(700);
-
-  for (const line of s1Lines) {
-    s1Bubble.textContent = line;
+  const b1=document.getElementById("s1-bubble");
+  for(const l of s1Lines){
+    b1.textContent=l;
     await sleep(2200);
   }
-  await sleep(700);
 
-  // Slide 2
   showSlide("slide-2");
-  const s2Bubble = document.getElementById("s2-bubble");
-  const btnFaine = document.getElementById("btn-faine");
-
-  s2Bubble.textContent = "";
-  btnFaine.classList.add("hidden");
-
-  await sleep(700);
-  s2Bubble.textContent = "Fad or not, you are doing this…";
+  const b2=document.getElementById("s2-bubble");
+  const btn=document.getElementById("btn-faine");
+  b2.textContent="Fad or not, you are doing this…";
   await sleep(1600);
+  btn.classList.remove("hidden");
 
-  btnFaine.classList.remove("hidden");
-
-  btnFaine.addEventListener("click", () => {
+  btn.onclick=()=>{
     showSlide("slide-3");
-    initFinalScreen();
-    startDialogueRotation();
-    startTypingIndicator();
-  }, { once: true });
+    initFinal();
+    startDialogue();
+  };
 }
 
-// ---------- Final screen interactions ----------
-let finalInited = false;
+function initFinal(){
+  const arena=document.getElementById("buttonArena");
+  const yesWrap=document.getElementById("yesWrap");
+  const no=document.getElementById("btn-no");
+  const ahem=document.getElementById("ahem");
 
-function initFinalScreen() {
-  if (finalInited) return;
-  finalInited = true;
+  let hideTimer=null;
 
-  const arena = document.getElementById("buttonArena");
-  const yesWrap = document.getElementById("yesWrap");
-  const btnYes = document.getElementById("btn-yes");
-  const btnNo  = document.getElementById("btn-no");
-  const ahem   = document.getElementById("ahem");
-
-  placeElementWithin(arena, btnNo, 0.70, 0.62);
-  placeYesWithin(arena, yesWrap, 0.45, 0.48);
-
-  let hideAhemTimer = null;
-
-  arena.addEventListener("mousemove", (e) => {
-    const rect = arena.getBoundingClientRect();
-    const targetX = e.clientX - rect.left;
-    const targetY = e.clientY - rect.top;
-
-    moveYesTowardPoint(arena, yesWrap, targetX, targetY);
-
+  arena.onmousemove=e=>{
+    const r=arena.getBoundingClientRect();
+    moveYes(yesWrap,e.clientX-r.left,e.clientY-r.top,arena);
     ahem.classList.remove("hidden");
-    if (hideAhemTimer) clearTimeout(hideAhemTimer);
-    hideAhemTimer = setTimeout(() => ahem.classList.add("hidden"), 140);
+    clearTimeout(hideTimer);
+    hideTimer=setTimeout(()=>ahem.classList.add("hidden"),140);
+    dodgeNo(no,e.clientX-r.left,e.clientY-r.top,arena);
+  };
 
-    dodgeNoIfClose(arena, btnNo, targetX, targetY);
-  });
-
-  arena.addEventListener("touchmove", (e) => {
-    const t = e.touches[0];
-    if (!t) return;
-
-    const rect = arena.getBoundingClientRect();
-    const targetX = t.clientX - rect.left;
-    const targetY = t.clientY - rect.top;
-
-    moveYesTowardPoint(arena, yesWrap, targetX, targetY);
-
-    ahem.classList.remove("hidden");
-    if (hideAhemTimer) clearTimeout(hideAhemTimer);
-    hideAhemTimer = setTimeout(() => ahem.classList.add("hidden"), 200);
-
-    dodgeNoIfClose(arena, btnNo, targetX, targetY);
-  }, { passive: true });
-
-  btnNo.addEventListener("mouseenter", () => randomReposition(arena, btnNo));
-  btnNo.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    randomReposition(arena, btnNo);
-  });
-
-  btnYes.addEventListener("click", () => runSuccess());
+  no.onmouseenter=()=>randomPos(no,arena);
+  document.getElementById("btn-yes").onclick=runSuccess;
 }
 
-function placeElementWithin(container, el, fx, fy) {
-  const c = container.getBoundingClientRect();
-  const w = el.offsetWidth;
-  const h = el.offsetHeight;
-
-  const x = clamp(c.width * fx, w * 0.5, c.width - w * 0.5);
-  const y = clamp(c.height * fy, h * 0.5, c.height - h * 0.5);
-
-  el.style.left = `${x}px`;
-  el.style.top  = `${y}px`;
+function moveYes(el,x,y,c){
+  const w=el.offsetWidth,h=el.offsetHeight;
+  el.style.left=clamp(x,w/2,c.clientWidth-w/2)+"px";
+  el.style.top=clamp(y,h/2,c.clientHeight-h/2)+"px";
 }
 
-function placeYesWithin(container, yesWrap, fx, fy) {
-  const c = container.getBoundingClientRect();
-  const w = yesWrap.offsetWidth;
-  const h = yesWrap.offsetHeight;
-
-  const x = clamp(c.width * fx, w * 0.5, c.width - w * 0.5);
-  const y = clamp(c.height * fy, h * 0.5, c.height - h * 0.5);
-
-  yesWrap.style.left = `${x}px`;
-  yesWrap.style.top  = `${y}px`;
+function dodgeNo(el,x,y,c){
+  const r=el.getBoundingClientRect();
+  const dx=x-(r.left-c.getBoundingClientRect().left+r.width/2);
+  const dy=y-(r.top-c.getBoundingClientRect().top+r.height/2);
+  if(Math.hypot(dx,dy)<120) randomPos(el,c);
+}
+function randomPos(el,c){
+  el.style.left=rand(40,c.clientWidth-40)+"px";
+  el.style.top=rand(40,c.clientHeight-40)+"px";
 }
 
-function moveYesTowardPoint(container, yesWrap, px, py) {
-  const c = container.getBoundingClientRect();
-  const w = yesWrap.offsetWidth;
-  const h = yesWrap.offsetHeight;
-
-  const x = clamp(px, w * 0.5, c.width - w * 0.5);
-  const y = clamp(py, h * 0.5, c.height - h * 0.5);
-
-  const curX = parseFloat(yesWrap.style.left || (c.width / 2));
-  const curY = parseFloat(yesWrap.style.top  || (c.height / 2));
-  const ease = 0.22;
-
-  const nextX = curX + (x - curX) * ease;
-  const nextY = curY + (y - curY) * ease;
-
-  yesWrap.style.left = `${nextX}px`;
-  yesWrap.style.top  = `${nextY}px`;
-}
-
-function dodgeNoIfClose(container, btnNo, px, py) {
-  const noRect = btnNo.getBoundingClientRect();
-  const cRect  = container.getBoundingClientRect();
-
-  const noX = (noRect.left - cRect.left) + noRect.width / 2;
-  const noY = (noRect.top  - cRect.top)  + noRect.height / 2;
-
-  const dx = px - noX;
-  const dy = py - noY;
-  const dist = Math.hypot(dx, dy);
-
-  if (dist < 120) randomReposition(container, btnNo);
-}
-
-function randomReposition(container, el) {
-  const c = container.getBoundingClientRect();
-  const w = el.offsetWidth;
-  const h = el.offsetHeight;
-
-  const pad = 12;
-  const x = rand(pad + w * 0.5, c.width - pad - w * 0.5);
-  const y = rand(pad + h * 0.5, c.height - pad - h * 0.5);
-
-  el.style.left = `${x}px`;
-  el.style.top  = `${y}px`;
-}
-
-// ---------- Slide 3 dialogue rotation (7s, no loop) ----------
-const dialogueMessages = [
+// dialogue rotation (no loop)
+const lines=[
   "awwwwww looks like im not taking no for an answer",
   "wow, still going after no huh",
   "are you not seeing the yes, is it a visibility issue or an intent issue?",
@@ -205,86 +92,37 @@ const dialogueMessages = [
   "Pretty please kar de, P?"
 ];
 
-let dialogueTimer = null;
-function startDialogueRotation() {
-  const el = document.getElementById("dialogueLine");
-  if (!el || dialogueTimer) return;
-
-  let idx = 0;
-
-  dialogueTimer = setInterval(() => {
-    if (idx < dialogueMessages.length - 1) {
-      idx++;
-      el.textContent = dialogueMessages[idx];
-    } else {
-      clearInterval(dialogueTimer);
-      dialogueTimer = null;
+function startDialogue(){
+  const el=document.getElementById("dialogueLine");
+  let i=0;
+  setInterval(()=>{
+    if(i<lines.length-1){
+      i++;
+      el.textContent=lines[i];
     }
-  }, 7000);
+  },7000);
 }
 
-// ---------- Typing indicator (LEFT → RIGHT dots) ----------
-let typingTimer = null;
-function startTypingIndicator() {
-  const dotsEl = document.getElementById("typingDots");
-  if (!dotsEl || typingTimer) return;
-
-  let count = 0;
-
-  typingTimer = setInterval(() => {
-    count = (count % 3) + 1;   // 1 → 2 → 3 → 1
-    dotsEl.textContent = ".".repeat(count);
-  }, 420);
-}
-
-// ---------- Success screen ----------
-async function runSuccess() {
+// SUCCESS
+async function runSuccess(){
   showSlide("slide-success");
-
-  if (dialogueTimer) clearInterval(dialogueTimer);
-  if (typingTimer) clearInterval(typingTimer);
-
-  const target = document.getElementById("successText");
-  const sunflower = document.getElementById("sunflower");
-
-  target.innerHTML = "";
-  sunflower.classList.add("hidden");
-
-  const parts = [
+  const t=document.getElementById("successText");
+  t.innerHTML="";
+  const parts=[
     "Thanks for making my life soooo much brighter you beautiful, witty, gorgeous, ",
-    { hawt: true, text: "hawt" },
+    "<span class='hawtWrap'>hawt</span>",
     ", amazing, angel-voiced sunflower you. 😘"
   ];
-
-  await typeParts(target, parts, 28);
-  await sleep(250);
-  sunflower.classList.remove("hidden");
-}
-
-async function typeParts(targetEl, parts, delayMs) {
-  for (const part of parts) {
-    if (typeof part === "string") {
-      await typeTextNode(targetEl, part, delayMs);
-    } else if (part && part.hawt) {
-      const span = document.createElement("span");
-      span.className = "hawtWrap";
-      targetEl.appendChild(span);
-      await typeTextNode(span, part.text, delayMs);
+  for(const p of parts){
+    if(p.startsWith("<")){
+      t.insertAdjacentHTML("beforeend",p);
+    }else{
+      for(const ch of p){
+        t.append(ch);
+        await sleep(28);
+      }
     }
   }
 }
 
-async function typeTextNode(containerEl, text, delayMs) {
-  let node = containerEl.lastChild;
-  if (!node || node.nodeType !== Node.TEXT_NODE) {
-    node = document.createTextNode("");
-    containerEl.appendChild(node);
-  }
-  for (const ch of text) {
-    node.nodeValue += ch;
-    await sleep(delayMs);
-  }
-}
-
-// ---------- Start ----------
-runSlides().catch(console.error);
+runSlides();
