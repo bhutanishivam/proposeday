@@ -55,8 +55,8 @@ async function runSlides() {
   btnFaine.addEventListener("click", () => {
     showSlide("slide-3");
     initFinalScreen();
-    startDialogueRotation();   // NEW
-    startTypingIndicator();    // NEW
+    startDialogueRotation();
+    startTypingIndicator();
   }, { once: true });
 }
 
@@ -76,7 +76,6 @@ function initFinalScreen() {
   placeElementWithin(arena, btnNo, 0.70, 0.62);
   placeYesWithin(arena, yesWrap, 0.45, 0.48);
 
-  // YES follows cursor ONLY when cursor moves
   let hideAhemTimer = null;
 
   arena.addEventListener("mousemove", (e) => {
@@ -86,7 +85,6 @@ function initFinalScreen() {
 
     moveYesTowardPoint(arena, yesWrap, targetX, targetY);
 
-    // show "ahem ahem ❤️" while moving; hide after movement stops
     ahem.classList.remove("hidden");
     if (hideAhemTimer) clearTimeout(hideAhemTimer);
     hideAhemTimer = setTimeout(() => ahem.classList.add("hidden"), 140);
@@ -145,7 +143,6 @@ function placeYesWithin(container, yesWrap, fx, fy) {
 }
 
 function moveYesTowardPoint(container, yesWrap, px, py) {
-  // Only called on mousemove/touchmove => YES will not move if cursor is stationary.
   const c = container.getBoundingClientRect();
   const w = yesWrap.offsetWidth;
   const h = yesWrap.offsetHeight;
@@ -175,8 +172,7 @@ function dodgeNoIfClose(container, btnNo, px, py) {
   const dy = py - noY;
   const dist = Math.hypot(dx, dy);
 
-  const threshold = 120;
-  if (dist < threshold) randomReposition(container, btnNo);
+  if (dist < 120) randomReposition(container, btnNo);
 }
 
 function randomReposition(container, el) {
@@ -192,7 +188,7 @@ function randomReposition(container, el) {
   el.style.top  = `${y}px`;
 }
 
-// ---------- NEW: Slide 3 dialogue rotation (every 7s, no loop) ----------
+// ---------- Slide 3 dialogue rotation (7s, no loop) ----------
 const dialogueMessages = [
   "awwwwww looks like im not taking no for an answer",
   "wow, still going after no huh",
@@ -212,40 +208,32 @@ const dialogueMessages = [
 let dialogueTimer = null;
 function startDialogueRotation() {
   const el = document.getElementById("dialogueLine");
-  if (!el) return;
+  if (!el || dialogueTimer) return;
 
-  // Start at the first line already present (index 0)
   let idx = 0;
-
-  // If already running, don't start again
-  if (dialogueTimer) return;
 
   dialogueTimer = setInterval(() => {
     if (idx < dialogueMessages.length - 1) {
-      idx += 1;
+      idx++;
       el.textContent = dialogueMessages[idx];
     } else {
-      // Stop at the last message (no loop)
       clearInterval(dialogueTimer);
       dialogueTimer = null;
     }
   }, 7000);
 }
 
-// ---------- NEW: Typing indicator ("shivam is typing...") ----------
+// ---------- Typing indicator (LEFT → RIGHT dots) ----------
 let typingTimer = null;
 function startTypingIndicator() {
   const dotsEl = document.getElementById("typingDots");
-  if (!dotsEl) return;
+  if (!dotsEl || typingTimer) return;
 
-  if (typingTimer) return;
-
-  const states = [".", "..", "..."];
-  let i = 0;
+  let count = 0;
 
   typingTimer = setInterval(() => {
-    dotsEl.textContent = states[i];
-    i = (i + 1) % states.length;
+    count = (count % 3) + 1;   // 1 → 2 → 3 → 1
+    dotsEl.textContent = ".".repeat(count);
   }, 420);
 }
 
@@ -253,9 +241,8 @@ function startTypingIndicator() {
 async function runSuccess() {
   showSlide("slide-success");
 
-  // Stop timers when moving to success (optional cleanup)
-  if (dialogueTimer) { clearInterval(dialogueTimer); dialogueTimer = null; }
-  if (typingTimer) { clearInterval(typingTimer); typingTimer = null; }
+  if (dialogueTimer) clearInterval(dialogueTimer);
+  if (typingTimer) clearInterval(typingTimer);
 
   const target = document.getElementById("successText");
   const sunflower = document.getElementById("sunflower");
@@ -270,7 +257,6 @@ async function runSuccess() {
   ];
 
   await typeParts(target, parts, 28);
-
   await sleep(250);
   sunflower.classList.remove("hidden");
 }
