@@ -8,7 +8,7 @@ const sleep = ms => new Promise(r=>setTimeout(r,ms));
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const rand=(a,b)=>Math.random()*(b-a)+a;
 
-// SLIDE 1
+// ---------- SLIDE 1 ----------
 const s1Lines=[
   "Oh god…",
   "I’ve seen this on Instagram already.",
@@ -23,6 +23,7 @@ async function runSlides(){
     await sleep(2200);
   }
 
+  // ---------- SLIDE 2 ----------
   showSlide("slide-2");
   const b2=document.getElementById("s2-bubble");
   const btn=document.getElementById("btn-faine");
@@ -37,6 +38,7 @@ async function runSlides(){
   };
 }
 
+// ---------- SLIDE 3 INTERACTIONS ----------
 function initFinal(){
   const arena=document.getElementById("buttonArena");
   const yesWrap=document.getElementById("yesWrap");
@@ -75,8 +77,8 @@ function randomPos(el,c){
   el.style.top=rand(40,c.clientHeight-40)+"px";
 }
 
-// dialogue rotation (no loop)
-const lines=[
+// ---------- DIALOGUE ROTATION (7s, NO LOOP) ----------
+const dialogueLines=[
   "awwwwww looks like im not taking no for an answer",
   "wow, still going after no huh",
   "are you not seeing the yes, is it a visibility issue or an intent issue?",
@@ -92,28 +94,38 @@ const lines=[
   "Pretty please kar de, P?"
 ];
 
+let dialogueTimer=null;
 function startDialogue(){
-  const el=document.getElementById("dialogueLine");
+  const lineEl=document.getElementById("dialogueLine");
+  const typingEl=document.querySelector(".typing");
+
   let i=0;
-  setInterval(()=>{
-    if(i<lines.length-1){
+  dialogueTimer=setInterval(()=>{
+    if(i < dialogueLines.length-1){
       i++;
-      el.textContent=lines[i];
+      lineEl.textContent=dialogueLines[i];
+
+      // when LAST message appears → stop typing indicator
+      if(i === dialogueLines.length-1){
+        clearInterval(dialogueTimer);
+        dialogueTimer=null;
+        if(typingEl){
+          typingEl.style.opacity="0";
+          typingEl.style.transition="opacity 600ms ease";
+        }
+      }
     }
   },7000);
 }
 
-// SUCCESS (fixed: sunflower now appears)
+// ---------- SUCCESS ----------
 async function runSuccess(){
   showSlide("slide-success");
 
   const t=document.getElementById("successText");
   const sunflower=document.getElementById("sunflower");
-
-  // Make sure sunflower is hidden at start of animation
-  if (sunflower) sunflower.classList.add("hidden");
-
   t.innerHTML="";
+  if(sunflower) sunflower.classList.add("hidden");
 
   const parts=[
     "Thanks for making my life soooo much brighter you beautiful, witty, gorgeous, ",
@@ -132,8 +144,8 @@ async function runSuccess(){
     }
   }
 
-  // Reveal sunflower after the text finishes typing
-  if (sunflower) sunflower.classList.remove("hidden");
+  if(sunflower) sunflower.classList.remove("hidden");
 }
 
+// ---------- START ----------
 runSlides();
