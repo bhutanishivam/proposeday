@@ -232,7 +232,8 @@ body{
 
 .dots{
   display:inline-block;
-  width: 18px; /* prevents layout shifting as dots change */
+  width: 18px;          /* keeps layout stable */
+  text-align: left;     /* makes dots fill left -> right */
 }
 
 .hidden{ display:none !important; }
