@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Valentine</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app" id="app">
+
+    <!-- SLIDE 1 -->
+    <section class="slide active" id="slide-1" aria-label="Slide 1">
+      <div class="card">
+        <div class="photoWrap">
+          <img class="photo" src="assets/prangna.jpg" alt="Prangna" />
+          <div class="bubble" role="status" aria-live="polite">
+            <div class="bubbleText" id="s1-bubble"></div>
+          </div>
+        </div>
+
+        <div class="caption">Prangna while opening the email probably</div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2 -->
+    <section class="slide" id="slide-2" aria-label="Slide 2">
+      <div class="card">
+        <div class="photoWrap">
+          <img class="photo" src="assets/me.jpg" alt="Me" />
+          <div class="bubble" role="status" aria-live="polite">
+            <div class="bubbleText" id="s2-bubble"></div>
+          </div>
+        </div>
+
+        <div class="ctaRow">
+          <button class="btn primary hidden" id="btn-faine" type="button">Faineeeeee</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3 -->
+    <section class="slide" id="slide-3" aria-label="Final question">
+      <div class="card tall" id="arena">
+        <h1 class="title">Will you be my Valentine?</h1>
+
+        <div class="buttonArena" id="buttonArena">
+          <div class="yesWrap" id="yesWrap">
+            <button class="btn yes" id="btn-yes" type="button">YES</button>
+            <span class="ahem hidden" id="ahem">ahem&nbsp;&nbsp;ahem</span>
+          </div>
+
+          <button class="btn no" id="btn-no" type="button">NO</button>
+        </div>
+
+        <div class="hint">🙂</div>
+      </div>
+    </section>
+
+    <!-- SUCCESS -->
+    <section class="slide" id="slide-success" aria-label="Success">
+      <div class="card success">
+        <div class="successText" id="successText" aria-live="polite"></div>
+
+        <div class="sunflowerWrap">
+          <img class="sunflower hidden" id="sunflower" src="assets/sunflower.png" alt="Sunflower" />
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
