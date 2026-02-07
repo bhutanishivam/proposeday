@@ -103,16 +103,24 @@ function startDialogue(){
   },7000);
 }
 
-// SUCCESS
+// SUCCESS (fixed: sunflower now appears)
 async function runSuccess(){
   showSlide("slide-success");
+
   const t=document.getElementById("successText");
+  const sunflower=document.getElementById("sunflower");
+
+  // Make sure sunflower is hidden at start of animation
+  if (sunflower) sunflower.classList.add("hidden");
+
   t.innerHTML="";
+
   const parts=[
     "Thanks for making my life soooo much brighter you beautiful, witty, gorgeous, ",
     "<span class='hawtWrap'>hawt</span>",
     ", amazing, angel-voiced sunflower you. 😘"
   ];
+
   for(const p of parts){
     if(p.startsWith("<")){
       t.insertAdjacentHTML("beforeend",p);
@@ -123,6 +131,9 @@ async function runSuccess(){
       }
     }
   }
+
+  // Reveal sunflower after the text finishes typing
+  if (sunflower) sunflower.classList.remove("hidden");
 }
 
 runSlides();
