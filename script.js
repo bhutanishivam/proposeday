@@ -55,6 +55,8 @@ async function runSlides() {
   btnFaine.addEventListener("click", () => {
     showSlide("slide-3");
     initFinalScreen();
+    startDialogueRotation();   // NEW
+    startTypingIndicator();    // NEW
   }, { once: true });
 }
 
@@ -84,13 +86,10 @@ function initFinalScreen() {
 
     moveYesTowardPoint(arena, yesWrap, targetX, targetY);
 
-    // Show ahem while mouse is moving; hide shortly after movement stops
+    // show "ahem ahem ❤️" while moving; hide after movement stops
     ahem.classList.remove("hidden");
     if (hideAhemTimer) clearTimeout(hideAhemTimer);
-    hideAhemTimer = setTimeout(() => {
-      ahem.classList.add("hidden");
-      // YES stays where it is because we only move it during mousemove.
-    }, 140);
+    hideAhemTimer = setTimeout(() => ahem.classList.add("hidden"), 140);
 
     dodgeNoIfClose(arena, btnNo, targetX, targetY);
   });
@@ -193,9 +192,70 @@ function randomReposition(container, el) {
   el.style.top  = `${y}px`;
 }
 
-// ---------- Success screen (fire stays now) ----------
+// ---------- NEW: Slide 3 dialogue rotation (every 7s, no loop) ----------
+const dialogueMessages = [
+  "awwwwww looks like im not taking no for an answer",
+  "wow, still going after no huh",
+  "are you not seeing the yes, is it a visibility issue or an intent issue?",
+  "yes click kar naaaaaa",
+  "katai besharam",
+  "its cool, i can do this all day.",
+  "you know what, im just gonna give you the silent treatment until you click yes",
+  "deafening silence",
+  "you kidding me?",
+  "jai hanuman gyaan gun saagar...",
+  "sunn youre probably running late, kar de abh",
+  "back to deafening silence for you...",
+  "Pretty please kar de, P?"
+];
+
+let dialogueTimer = null;
+function startDialogueRotation() {
+  const el = document.getElementById("dialogueLine");
+  if (!el) return;
+
+  // Start at the first line already present (index 0)
+  let idx = 0;
+
+  // If already running, don't start again
+  if (dialogueTimer) return;
+
+  dialogueTimer = setInterval(() => {
+    if (idx < dialogueMessages.length - 1) {
+      idx += 1;
+      el.textContent = dialogueMessages[idx];
+    } else {
+      // Stop at the last message (no loop)
+      clearInterval(dialogueTimer);
+      dialogueTimer = null;
+    }
+  }, 7000);
+}
+
+// ---------- NEW: Typing indicator ("shivam is typing...") ----------
+let typingTimer = null;
+function startTypingIndicator() {
+  const dotsEl = document.getElementById("typingDots");
+  if (!dotsEl) return;
+
+  if (typingTimer) return;
+
+  const states = [".", "..", "..."];
+  let i = 0;
+
+  typingTimer = setInterval(() => {
+    dotsEl.textContent = states[i];
+    i = (i + 1) % states.length;
+  }, 420);
+}
+
+// ---------- Success screen ----------
 async function runSuccess() {
   showSlide("slide-success");
+
+  // Stop timers when moving to success (optional cleanup)
+  if (dialogueTimer) { clearInterval(dialogueTimer); dialogueTimer = null; }
+  if (typingTimer) { clearInterval(typingTimer); typingTimer = null; }
 
   const target = document.getElementById("successText");
   const sunflower = document.getElementById("sunflower");
@@ -206,7 +266,7 @@ async function runSuccess() {
   const parts = [
     "Thanks for making my life soooo much brighter you beautiful, witty, gorgeous, ",
     { hawt: true, text: "hawt" },
-    ", amazing sunflower you. 😘"
+    ", amazing, angel-voiced sunflower you. 😘"
   ];
 
   await typeParts(target, parts, 28);
@@ -228,9 +288,6 @@ async function typeParts(targetEl, parts, delayMs) {
   }
 }
 
-// IMPORTANT FIX:
-// We append into a dedicated text node instead of using el.textContent += ...
-// That prevents wiping out the special hawt span, so the fire stays.
 async function typeTextNode(containerEl, text, delayMs) {
   let node = containerEl.lastChild;
   if (!node || node.nodeType !== Node.TEXT_NODE) {
