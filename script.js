@@ -52,10 +52,9 @@ async function runSlides() {
 
   btnFaine.classList.remove("hidden");
 
-  // Wait for click to go to Slide 3
   btnFaine.addEventListener("click", () => {
     showSlide("slide-3");
-    initFinalScreen(); // set up YES/NO logic
+    initFinalScreen();
   }, { once: true });
 }
 
@@ -72,7 +71,6 @@ function initFinalScreen() {
   const btnNo  = document.getElementById("btn-no");
   const ahem   = document.getElementById("ahem");
 
-  // Place YES roughly center; NO somewhere else
   placeElementWithin(arena, btnNo, 0.70, 0.62);
   placeYesWithin(arena, yesWrap, 0.45, 0.48);
 
@@ -80,29 +78,27 @@ function initFinalScreen() {
   let hideAhemTimer = null;
 
   arena.addEventListener("mousemove", (e) => {
-    // YES follow (reactive to movement)
     const rect = arena.getBoundingClientRect();
     const targetX = e.clientX - rect.left;
     const targetY = e.clientY - rect.top;
 
     moveYesTowardPoint(arena, yesWrap, targetX, targetY);
 
-    // Show ahem while moving; hide shortly after movement stops
+    // Show ahem while mouse is moving; hide shortly after movement stops
     ahem.classList.remove("hidden");
     if (hideAhemTimer) clearTimeout(hideAhemTimer);
     hideAhemTimer = setTimeout(() => {
       ahem.classList.add("hidden");
-      // YES is already resting because we only move on mousemove
+      // YES stays where it is because we only move it during mousemove.
     }, 140);
 
-    // NO dodge when cursor approaches
     dodgeNoIfClose(arena, btnNo, targetX, targetY);
   });
 
-  // Touch support: moving finger = touchmove triggers same logic
   arena.addEventListener("touchmove", (e) => {
     const t = e.touches[0];
     if (!t) return;
+
     const rect = arena.getBoundingClientRect();
     const targetX = t.clientX - rect.left;
     const targetY = t.clientY - rect.top;
@@ -116,24 +112,16 @@ function initFinalScreen() {
     dodgeNoIfClose(arena, btnNo, targetX, targetY);
   }, { passive: true });
 
-  // Also dodge if user manages to hover NO
-  btnNo.addEventListener("mouseenter", () => {
-    randomReposition(arena, btnNo);
-  });
-
+  btnNo.addEventListener("mouseenter", () => randomReposition(arena, btnNo));
   btnNo.addEventListener("touchstart", (e) => {
     e.preventDefault();
     randomReposition(arena, btnNo);
   });
 
-  // YES click -> success
-  btnYes.addEventListener("click", () => {
-    runSuccess();
-  });
+  btnYes.addEventListener("click", () => runSuccess());
 }
 
 function placeElementWithin(container, el, fx, fy) {
-  // fx/fy are 0..1 positions within container
   const c = container.getBoundingClientRect();
   const w = el.offsetWidth;
   const h = el.offsetHeight;
@@ -158,17 +146,14 @@ function placeYesWithin(container, yesWrap, fx, fy) {
 }
 
 function moveYesTowardPoint(container, yesWrap, px, py) {
-  // IMPORTANT: this only runs on mousemove/touchmove.
-  // So YES will NOT "move while cursor approaches" unless cursor itself moved.
+  // Only called on mousemove/touchmove => YES will not move if cursor is stationary.
   const c = container.getBoundingClientRect();
   const w = yesWrap.offsetWidth;
   const h = yesWrap.offsetHeight;
 
-  // Keep YES within bounds
   const x = clamp(px, w * 0.5, c.width - w * 0.5);
   const y = clamp(py, h * 0.5, c.height - h * 0.5);
 
-  // gentle easing toward cursor
   const curX = parseFloat(yesWrap.style.left || (c.width / 2));
   const curY = parseFloat(yesWrap.style.top  || (c.height / 2));
   const ease = 0.22;
@@ -184,7 +169,6 @@ function dodgeNoIfClose(container, btnNo, px, py) {
   const noRect = btnNo.getBoundingClientRect();
   const cRect  = container.getBoundingClientRect();
 
-  // compute NO center relative to container
   const noX = (noRect.left - cRect.left) + noRect.width / 2;
   const noY = (noRect.top  - cRect.top)  + noRect.height / 2;
 
@@ -192,12 +176,8 @@ function dodgeNoIfClose(container, btnNo, px, py) {
   const dy = py - noY;
   const dist = Math.hypot(dx, dy);
 
-  // threshold: when cursor gets close, move it
   const threshold = 120;
-
-  if (dist < threshold) {
-    randomReposition(container, btnNo);
-  }
+  if (dist < threshold) randomReposition(container, btnNo);
 }
 
 function randomReposition(container, el) {
@@ -213,21 +193,20 @@ function randomReposition(container, el) {
   el.style.top  = `${y}px`;
 }
 
-// ---------- Success screen ----------
+// ---------- Success screen (fire stays now) ----------
 async function runSuccess() {
   showSlide("slide-success");
 
   const target = document.getElementById("successText");
   const sunflower = document.getElementById("sunflower");
 
-  target.innerHTML = ""; // we will type into it
+  target.innerHTML = "";
   sunflower.classList.add("hidden");
 
-  // Message with fire behind "hawt"
   const parts = [
-    "Thanks for making my life soooo much brighter you beautiful, gorgeous, ",
+    "Thanks for making my life soooo much brighter you beautiful, witty, gorgeous, ",
     { hawt: true, text: "hawt" },
-    " sunflower you."
+    ", amazing sunflower you. 😘"
   ];
 
   await typeParts(target, parts, 28);
@@ -237,24 +216,29 @@ async function runSuccess() {
 }
 
 async function typeParts(targetEl, parts, delayMs) {
-  // Types normal strings char-by-char.
-  // Inserts the "hawt" span with fire effect when reached.
   for (const part of parts) {
     if (typeof part === "string") {
-      await typeText(targetEl, part, delayMs);
+      await typeTextNode(targetEl, part, delayMs);
     } else if (part && part.hawt) {
-      // insert hawt with special span
       const span = document.createElement("span");
       span.className = "hawtWrap";
       targetEl.appendChild(span);
-      await typeText(span, part.text, delayMs);
+      await typeTextNode(span, part.text, delayMs);
     }
   }
 }
 
-async function typeText(el, text, delayMs) {
+// IMPORTANT FIX:
+// We append into a dedicated text node instead of using el.textContent += ...
+// That prevents wiping out the special hawt span, so the fire stays.
+async function typeTextNode(containerEl, text, delayMs) {
+  let node = containerEl.lastChild;
+  if (!node || node.nodeType !== Node.TEXT_NODE) {
+    node = document.createTextNode("");
+    containerEl.appendChild(node);
+  }
   for (const ch of text) {
-    el.textContent += ch;
+    node.nodeValue += ch;
     await sleep(delayMs);
   }
 }
